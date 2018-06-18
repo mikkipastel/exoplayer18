@@ -4,7 +4,9 @@ import android.app.Activity
 import android.os.Bundle
 import com.google.android.exoplayer2.ExoPlayerFactory
 import com.google.android.exoplayer2.SimpleExoPlayer
+import com.google.android.exoplayer2.ext.ima.ImaAdsLoader
 import com.google.android.exoplayer2.source.ExtractorMediaSource
+import com.google.android.exoplayer2.source.ads.AdsMediaSource
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
@@ -14,9 +16,13 @@ class MainActivity : Activity() {
 
     private var player: SimpleExoPlayer? = null
 
+    private lateinit var adsLoader: ImaAdsLoader
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        adsLoader = ImaAdsLoader(this, Samples.AD_TAG_URI)
     }
 
     override fun onStart() {
@@ -31,7 +37,10 @@ class MainActivity : Activity() {
         val mediaSource = ExtractorMediaSource.Factory(dataSourceFactory)
                 .createMediaSource(Samples.MP4_URI)
 
-        player?.prepare(mediaSource)
+        val adsMediaSource = AdsMediaSource(mediaSource, dataSourceFactory, adsLoader,
+                playerView.overlayFrameLayout)
+
+        player?.prepare(adsMediaSource)
         player?.playWhenReady = true
 
     }
@@ -42,5 +51,11 @@ class MainActivity : Activity() {
         playerView.player = null
         player?.release()
         player = null
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        adsLoader.release()
     }
 }

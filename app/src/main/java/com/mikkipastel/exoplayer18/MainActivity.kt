@@ -1,46 +1,28 @@
 package com.mikkipastel.exoplayer18
 
 import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
-import com.google.android.exoplayer2.ExoPlayerFactory
-import com.google.android.exoplayer2.SimpleExoPlayer
-import com.google.android.exoplayer2.source.ExtractorMediaSource
-import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
-import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
+import android.widget.ArrayAdapter
 import com.google.android.exoplayer2.util.Util
+import com.mikkipastel.exoplayer18.Samples.SAMPLES
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : Activity() {
 
-    private var player: SimpleExoPlayer? = null
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-    }
 
-    override fun onStart() {
-        super.onStart()
+        val intent = Intent(this, AudioPlayerService::class.java)
+        Util.startForegroundService(this, intent)
 
-        player = ExoPlayerFactory.newSimpleInstance(this, DefaultTrackSelector())
-
-        playerView.player = player
-
-        val dataSourceFactory = DefaultDataSourceFactory(this,
-                Util.getUserAgent(this, getString(R.string.app_name)))
-        val mediaSource = ExtractorMediaSource.Factory(dataSourceFactory)
-                .createMediaSource(Samples.MP4_URI)
-
-        player?.prepare(mediaSource)
-        player?.playWhenReady = true
+        listview.adapter = ArrayAdapter(
+                this,
+                android.R.layout.simple_list_item_1,
+                emptyArray<Samples>()
+        )
 
     }
 
-    override fun onStop() {
-        super.onStop()
-
-        playerView.player = null
-        player?.release()
-        player = null
-    }
 }

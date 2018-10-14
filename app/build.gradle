@@ -30,4 +30,5 @@ dependencies {
 
     implementation 'com.google.android.exoplayer:exoplayer-core:2.8.3'
     implementation 'com.google.android.exoplayer:exoplayer-ui:2.8.3'
+    implementation 'com.google.android.exoplayer:extension-mediasession:2.8.3'
 }

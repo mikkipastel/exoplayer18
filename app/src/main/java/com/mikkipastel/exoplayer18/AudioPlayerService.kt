@@ -6,15 +6,20 @@ import android.app.Service
 import android.content.Intent
 import android.graphics.Bitmap
 import android.os.IBinder
+import android.support.v4.media.MediaDescriptionCompat
+import android.support.v4.media.session.MediaSessionCompat
 import com.google.android.exoplayer2.ExoPlayerFactory
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
+import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
+import com.google.android.exoplayer2.ext.mediasession.TimelineQueueNavigator
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource
 import com.google.android.exoplayer2.source.ExtractorMediaSource
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.exoplayer2.ui.PlayerNotificationManager
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
+import com.mikkipastel.exoplayer18.C.MEDIA_SESSION_TAG
 import com.mikkipastel.exoplayer18.C.PLAYBACK_CHANNEL_ID
 import com.mikkipastel.exoplayer18.C.PLAYBACK_NOTIFICATION_ID
 import com.mikkipastel.exoplayer18.Samples.SAMPLES
@@ -24,6 +29,9 @@ class AudioPlayerService: Service() {
     lateinit var player: SimpleExoPlayer
 
     lateinit var playerNotificationManager: PlayerNotificationManager
+
+    lateinit var mediaSession: MediaSessionCompat
+    lateinit var mediaSessionConnector: MediaSessionConnector
 
     override fun onCreate() {
         super.onCreate()
@@ -89,9 +97,26 @@ class AudioPlayerService: Service() {
             })
             setPlayer(player)
         }
+
+        mediaSession = MediaSessionCompat(context, MEDIA_SESSION_TAG)
+        mediaSession.isActive = true
+        playerNotificationManager.setMediaSessionToken(mediaSession.sessionToken)
+
+        mediaSessionConnector = MediaSessionConnector(mediaSession)
+        mediaSessionConnector.apply {
+            setQueueNavigator(object: TimelineQueueNavigator(mediaSession) {
+                override fun getMediaDescription(player: Player?, windowIndex: Int): MediaDescriptionCompat {
+                    return Samples.getMediaDescription(context, SAMPLES[windowIndex])
+                }
+
+            })
+            setPlayer(player, null)
+        }
     }
 
     override fun onDestroy() {
+        mediaSession.release()
+        mediaSessionConnector.setPlayer(null, null)
         playerNotificationManager.setPlayer(null)
         player.release()
         super.onDestroy()

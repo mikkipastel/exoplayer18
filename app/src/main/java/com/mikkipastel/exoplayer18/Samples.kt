@@ -8,6 +8,7 @@ import android.graphics.Bitmap
 import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.os.Bundle
+import android.support.v4.content.ContextCompat
 
 object Samples {
 
@@ -57,7 +58,7 @@ object Samples {
     }
 
     fun getBitmap(context: Context, @DrawableRes bitmapResource: Int): Bitmap {
-        return (context.resources.getDrawable(bitmapResource, context.theme) as BitmapDrawable).bitmap
+        return (ContextCompat.getDrawable(context, bitmapResource) as BitmapDrawable).bitmap
     }
 
 }

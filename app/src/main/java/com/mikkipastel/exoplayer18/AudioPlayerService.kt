@@ -18,6 +18,9 @@ import com.google.android.exoplayer2.source.ExtractorMediaSource
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.exoplayer2.ui.PlayerNotificationManager
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
+import com.google.android.exoplayer2.upstream.cache.CacheDataSinkFactory
+import com.google.android.exoplayer2.upstream.cache.CacheDataSource
+import com.google.android.exoplayer2.upstream.cache.CacheDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 import com.mikkipastel.exoplayer18.C.MEDIA_SESSION_TAG
 import com.mikkipastel.exoplayer18.C.PLAYBACK_CHANNEL_ID
@@ -26,12 +29,12 @@ import com.mikkipastel.exoplayer18.Samples.SAMPLES
 
 class AudioPlayerService: Service() {
 
-    lateinit var player: SimpleExoPlayer
+    private var player: SimpleExoPlayer? = null
 
-    lateinit var playerNotificationManager: PlayerNotificationManager
+    private lateinit var playerNotificationManager: PlayerNotificationManager
 
-    lateinit var mediaSession: MediaSessionCompat
-    lateinit var mediaSessionConnector: MediaSessionConnector
+    private lateinit var mediaSession: MediaSessionCompat
+    private lateinit var mediaSessionConnector: MediaSessionConnector
 
     override fun onCreate() {
         super.onCreate()
@@ -44,15 +47,21 @@ class AudioPlayerService: Service() {
                 Util.getUserAgent(context, "AudioDemo")
         )
 
+        val cacheDataSourceFactory = CacheDataSourceFactory(DownloadUtil.getCache(context),
+                dataSourceFactory,
+                CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
+
         val concatenatingMediaSource = ConcatenatingMediaSource()
         for (sample in SAMPLES) {
-            val mediaSource = ExtractorMediaSource.Factory(dataSourceFactory)
+            val mediaSource = ExtractorMediaSource.Factory(cacheDataSourceFactory)
                     .createMediaSource(sample.uri)
             concatenatingMediaSource.addMediaSource(mediaSource)
         }
 
-        player.prepare(concatenatingMediaSource)
-        player.playWhenReady = true
+        player?.apply {
+            prepare(concatenatingMediaSource)
+            playWhenReady = true
+        }
 
         playerNotificationManager = PlayerNotificationManager.createWithNotificationChannel(
                 context,
@@ -118,7 +127,8 @@ class AudioPlayerService: Service() {
         mediaSession.release()
         mediaSessionConnector.setPlayer(null, null)
         playerNotificationManager.setPlayer(null)
-        player.release()
+        player?.release()
+        player = null
         super.onDestroy()
     }
 

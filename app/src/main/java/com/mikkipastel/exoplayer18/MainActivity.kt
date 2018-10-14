@@ -4,6 +4,8 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.widget.ArrayAdapter
+import com.google.android.exoplayer2.offline.DownloadService
+import com.google.android.exoplayer2.offline.ProgressiveDownloadAction
 import com.google.android.exoplayer2.util.Util
 import com.mikkipastel.exoplayer18.Samples.SAMPLES
 import kotlinx.android.synthetic.main.activity_main.*
@@ -20,9 +22,18 @@ class MainActivity : Activity() {
         listview.adapter = ArrayAdapter(
                 this,
                 android.R.layout.simple_list_item_1,
-                emptyArray<Samples>()
-        )
+                SAMPLES)
 
+        listview.setOnItemClickListener { _, _, position, _ ->
+            val action = ProgressiveDownloadAction(SAMPLES[position].uri,
+                    false,
+                    null,
+                    null)
+            DownloadService.startWithAction(this,
+                    AudioDownloadService::class.java,
+                    action,
+                    false)
+        }
     }
 
 }
